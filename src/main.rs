@@ -1,4 +1,3 @@
-// Importa las macros necesarias
 use std::collections::HashMap;
 use structopt::StructOpt;
 
@@ -47,8 +46,12 @@ impl TaskManager {
     }
 
     fn list_tasks(&self) {
-        for (id, task) in &self.tasks {
-            println!("ID: {}, Tarea: {}", id, task);
+        if self.tasks.is_empty() {
+            println!("No hay tareas pendientes.");
+        } else {
+            for (id, task) in &self.tasks {
+                println!("ID: {}, Tarea: {}", id, task);
+            }
         }
     }
 }
