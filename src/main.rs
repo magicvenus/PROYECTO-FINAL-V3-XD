@@ -1,14 +1,15 @@
 use std::collections::HashMap;
+use std::fs::{self, File};
+use std::io::{self, BufRead};
+use std::path::Path;
 use structopt::StructOpt;
 
-// Define la estructura para los argumentos de la línea de comandos
 #[derive(Debug, StructOpt)]
 struct Opt {
     #[structopt(subcommand)]
     cmd: Command,
 }
 
-// Define los comandos posibles
 #[derive(Debug, StructOpt)]
 enum Command {
     #[structopt(name = "add")]
@@ -19,7 +20,6 @@ enum Command {
     List,
 }
 
-// Define la estructura principal de la aplicación
 struct TaskManager {
     tasks: HashMap<usize, String>,
 }
@@ -29,6 +29,25 @@ impl TaskManager {
         TaskManager {
             tasks: HashMap::new(),
         }
+    }
+
+    fn load_tasks(&mut self) -> io::Result<()> {
+        if let Ok(lines) = read_lines("tasks.txt") {
+            for (index, line) in lines.enumerate() {
+                if let Ok(task) = line {
+                    self.tasks.insert(index + 1, task);
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn save_tasks(&self) -> io::Result<()> {
+        let mut content = String::new();
+        for task in &self.tasks {
+            content.push_str(&format!("{} {}\n", task.0, task.1));
+        }
+        fs::write("tasks.txt", content)
     }
 
     fn add_task(&mut self, task: String) {
@@ -56,19 +75,29 @@ impl TaskManager {
     }
 }
 
-fn main() {
+fn read_lines(filename: &str) -> io::Result<io::Lines<io::BufReader<File>>> {
+    let file = File::open(filename)?;
+    Ok(io::BufReader::new(file).lines())
+}
+
+fn main() -> io::Result<()> {
     let opt = Opt::from_args();
     let mut task_manager = TaskManager::new();
+    task_manager.load_tasks()?; // Cargar tareas desde el archivo
 
     match opt.cmd {
         Command::Add { task } => {
             task_manager.add_task(task);
+            task_manager.save_tasks()?; // Guardar tareas en el archivo después de agregar una nueva tarea
         }
         Command::Complete { task_id } => {
             task_manager.complete_task(task_id);
+            task_manager.save_tasks()?; // Guardar tareas en el archivo después de completar una tarea
         }
         Command::List => {
             task_manager.list_tasks();
         }
     }
+
+    Ok(())
 }
