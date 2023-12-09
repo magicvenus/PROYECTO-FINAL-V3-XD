@@ -1,3 +1,24 @@
+/// CLI para la gestión de tareas
+///
+/// Esta aplicación permite administrar una lista de tareas con las siguientes funciones:
+/// - `add`: Agregar una nueva tarea a la lista.
+/// - `complete`: Marcar una tarea como completada utilizando su ID.
+/// - `list`: Mostrar todas las tareas existentes.
+/// 
+///
+/// Uso:
+///     cargo run -- add "Descripción de la tarea"     // Agregar una nueva tarea
+///     cargo run -- complete <ID>                    // Marcar una tarea como completada
+///     cargo run -- list                             // Mostrar todas las tareas
+///     
+///
+/// Ejemplos:
+///     cargo run -- add "Comprar leche"
+///     cargo run -- complete 2
+///     cargo run -- clear
+///
+/// Autor: Mario Salamanca U20210994
+
 use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::{self, BufRead};
@@ -33,19 +54,27 @@ impl TaskManager {
 
     fn load_tasks(&mut self) -> io::Result<()> {
         if let Ok(lines) = read_lines("tasks.txt") {
-            for (index, line) in lines.enumerate() {
-                if let Ok(task) = line {
-                    self.tasks.insert(index + 1, task);
+            for line in lines.flatten() {
+                let parts: Vec<&str> = line.splitn(2, ' ').collect();
+                if let Some((index, _task)) = parts.split_first() {
+                    if let Ok(index) = index.parse::<usize>() {
+                        // Revisamos si hay una tarea en los parts
+                        if let Some(task) = parts.get(1) {
+                            self.tasks.insert(index, task.to_string());
+                        }
+                    }
                 }
             }
+            // Reindexar las tareas para asegurar que los índices sean consecutivos
+            reindex_tasks(&mut self.tasks);
         }
         Ok(())
     }
 
     fn save_tasks(&self) -> io::Result<()> {
         let mut content = String::new();
-        for task in &self.tasks {
-            content.push_str(&format!("{} {}\n", task.0, task.1));
+        for (index, task) in &self.tasks {
+            content.push_str(&format!("{} {}\n", index, task));
         }
         fs::write("tasks.txt", content)
     }
@@ -73,6 +102,14 @@ impl TaskManager {
             }
         }
     }
+}
+
+fn reindex_tasks(tasks: &mut HashMap<usize, String>) {
+    let mut new_tasks = HashMap::new();
+    for (_index, task) in tasks.drain() {
+        new_tasks.insert(new_tasks.len() + 1, task);
+    }
+    *tasks = new_tasks;
 }
 
 fn read_lines(filename: &str) -> io::Result<io::Lines<io::BufReader<File>>> {
