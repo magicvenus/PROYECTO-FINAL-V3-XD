@@ -15,7 +15,7 @@
 /// Ejemplos:
 ///     cargo run -- add "Comprar leche"
 ///     cargo run -- complete 2
-///     cargo run -- clear
+///     cargo run -- list
 ///
 /// Autor: Mario Salamanca U20210994
 
