@@ -70,7 +70,7 @@ impl TaskManager {
         }
         Ok(())
     }
-
+//crea un archivo txt para las tareas
     fn save_tasks(&self) -> io::Result<()> {
         let mut content = String::new();
         for (index, task) in &self.tasks {
@@ -78,13 +78,13 @@ impl TaskManager {
         }
         fs::write("tasks.txt", content)
     }
-
+// sirve para añadir tareas
     fn add_task(&mut self, task: String) {
         let task_id = self.tasks.len() + 1;
         self.tasks.insert(task_id, task);
         println!("Tarea agregada con ID: {}", task_id);
     }
-
+//elimina la tarea completada
     fn complete_task(&mut self, task_id: usize) {
         if let Some(task) = self.tasks.remove(&task_id) {
             println!("Tarea completada: {}", task);
@@ -92,7 +92,7 @@ impl TaskManager {
             println!("No se encontró la tarea con ID: {}", task_id);
         }
     }
-
+//muetras las tareas en el archivo txt
     fn list_tasks(&self) {
         if self.tasks.is_empty() {
             println!("No hay tareas pendientes.");
